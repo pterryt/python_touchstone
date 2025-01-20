@@ -1,0 +1,4 @@
+<trans-unit id="{id}">
+  <source>{source}</source>
+  <target>{target}</target>
+</trans-unit>
