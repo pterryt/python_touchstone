@@ -1,35 +1,35 @@
-from datetime import datetime
 class DatabaseTable:
     def __init__(self):
         self.name = ""
         self.schema = list()
         self.data = list()
 
-    def add_column(self, name:str, data_type:str) -> None:
-        new_column = dict()
-        new_column["name"] = name
-        new_column["dataType"] = data_type
-        self.schema.append(new_column)
-
-    def add_rows(self, row_data:list[list]) -> None:
-        self.data.extend(row_data)
-
-    def set_name(self, name:str) -> None:
-        self.name = name
-
     def get_column(self, column_name:str) -> tuple:
         for index, column in enumerate(self.schema):
-            if column['name'] == column_name:
-                column_data = [row[index] for row in self.data]
+            if column["Field"] == column_name:
+                column_data = [row[column_name] for row in self.data]
                 return index, column_data
         return -1, None
 
-    def get_column_names(self) -> list[str]:
-        return [column['name'] for column in self.schema]
+    def get_column_by_index(self, index:int) -> tuple:
+        found = False
+        column_data = list()
+        try:
+            column_data.extend([row[index] for row in self.data])
+            found = True
+        except KeyError as e:
+            print(f"Failed to get data from index = {index} : {e}")
+        return found, column_data
+
+    def get_column_type(self, column_name:str) -> tuple:
+        for index, column in enumerate(self.schema):
+            if column["Field"] == column_name:
+                return index, column["Type"]
+        return -1, None
 
     def does_type_exist(self, data_type:str) -> bool:
         for column in self.schema:
-            if column["dataType"] == data_type:
+            if column["Type"] == data_type:
                 return True
         return False
 
@@ -48,8 +48,15 @@ class Database:
         self.tables.append(table)
 
     def remove_table(self, table_name:str) -> int:
-        for index, table in self.tables:
-            if table["name"] == table_name:
-                self.tables.pop(table)
+        for index, table in enumerate(self.tables):
+            if table.name == table_name:
+                self.tables.pop(index)
                 return index
         return -1
+
+    def __call__(self, index):
+        if 0 <= index < len(self.tables):
+            self.tables[index].print_details()
+        else:
+            print("Invalid table index.")
+

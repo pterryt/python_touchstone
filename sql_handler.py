@@ -18,21 +18,8 @@ def create_db_from_json(dir_path:str, db_list:list) -> Database:
             db.add_table(table)
     return db
 
-
-
-
-
-files = ["faction", "chartitles", "areagroup"]
-en_db = create_db_from_json("en_json", files)
-cn_db = create_db_from_json("cn_json", files)
-
-for tb in en_db.tables:
-    if isinstance(tb, DatabaseTable):
-        tb.print_details()
-
-# with open("db_test.txt", "w") as f:
-
-#
-# for index,db in enumerate(parsed_data.tables):
-#     print(index)
-#     db["table"].print_details()
+def test_fuction():
+    files = ["faction", "chartitles", "areagroup"]
+    en_db = create_db_from_json("en_json", files)
+    cn_db = create_db_from_json("cn_json", files)
+    return en_db, cn_db
