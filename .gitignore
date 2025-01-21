@@ -1,2 +1,8 @@
 sql_dumps/
 .venv/
+__pycache__/
+*.pyc
+*.pyo
+/cn_json/
+/en_json/
+/quick_script.py

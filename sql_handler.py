@@ -1,39 +1,38 @@
 """ This is the class for the database object pythonized """
-import re
-import database
+from database import DatabaseTable, Database
+import json
+import os
 
-def create_dbs_from_sqldump(filepath: str):
-    db = database.Database()
-    current_table = None
-    data_pattern = re.compile(r"INSERT INTO `\w+` VALUES \((.+)\)")
-    column_pattern = re.compile(r"`(\w+)`\s+(\w+)")
+def create_db_from_json(dir_path:str, db_list:list) -> Database:
+    db = Database()
 
-    with open(filepath, "r", encoding="utf-8") as file:
-        for line in file:
-            line = line.strip()
-
-            if line.startswith("CREATE TABLE"):
-                current_table = database.DatabaseTable()
-                current_table.name = re.search(r"`(\w+)`", line).group(1)
-
-            elif current_table and line.startswith("`"):
-                match = column_pattern.search(line)
-                column_name = match.group(1)
-                column_type = match.group(2)
-                current_table.add_column(column_name, column_type)
-
-            elif data_match := data_pattern.match(line):
-                values = data_match.group(1)
-                rows = [row.split(",") for row in re.findall(r"\((.*?)\)", values)]
-                current_table.add_rows(rows)
-                db.add_table(current_table.name, current_table)
-                current_table = None
-
+    for db_file in db_list:
+        db_file_name = db_file + ".json"
+        filepath = os.path.join(dir_path, db_file_name)
+        with open(filepath, "r", encoding="utf-8") as file:
+            json_data = json.load(file)
+            table = DatabaseTable()
+            table.name = db_file
+            table.schema = json_data.get('schema', {})
+            table.data = json_data.get('data', {})
+            db.add_table(table)
     return db
 
 
-# file_path = "sql_dumps/EnglishLocale.sql"
-# parsed_data = create_dbs_from_sqldump(file_path)
+
+
+
+files = ["faction", "chartitles", "areagroup"]
+en_db = create_db_from_json("en_json", files)
+cn_db = create_db_from_json("cn_json", files)
+
+for tb in en_db.tables:
+    if isinstance(tb, DatabaseTable):
+        tb.print_details()
+
+# with open("db_test.txt", "w") as f:
+
 #
-# for db in parsed_data:
-#     db.print_details()
+# for index,db in enumerate(parsed_data.tables):
+#     print(index)
+#     db["table"].print_details()
