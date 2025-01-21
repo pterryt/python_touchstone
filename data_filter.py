@@ -1,14 +1,13 @@
 from database import DatabaseTable, Database
 import xliff_handler
 import string_utils
-import hash
-import sql_handler as sh
+# import sql_handler as sh
 
-enCode = 1
-cnCode = 5
+enCode = "1"
+cnCode = "5"
 
 def chinese_locale_column(column_name:str) -> bool:
-    return column_name.endswith("5") and not column_name.endswith("15")
+    return column_name.endswith(cnCode) and not column_name.endswith("15")
 
 def remove_stringless(db: Database) -> None:
     for table in db.tables:
@@ -33,7 +32,7 @@ def get_non_matching_strings(eng_list:list[str], cn_list:list[str]) -> None | li
     return return_list
 
 
-def get_strings_to_localize(eng_db: Database, cn_db: Database) -> None | list[dict]:
+def get_strings_to_localize(eng_db: Database, cn_db: Database) -> None | list[xliff_handler.XliffFile]:
     print("Getting localized strings...")
     remove_stringless(eng_db)
     remove_stringless(cn_db)
@@ -47,7 +46,7 @@ def get_strings_to_localize(eng_db: Database, cn_db: Database) -> None | list[di
             for c_index, column in enumerate(cn_table.schema):
                 if column["Type"] == "text" and chinese_locale_column(column["Field"]):
                     text_columns.append(column["Field"])
-                    eng_text_columns.append(column["Field"][:-1] + "1")
+                    eng_text_columns.append(column["Field"][:-1] + enCode)
             # print(f"Text Column: {text_columns}")
             # print(f"English Text Column: {eng_text_columns}")
             for d_index, column in enumerate(text_columns):
@@ -56,18 +55,20 @@ def get_strings_to_localize(eng_db: Database, cn_db: Database) -> None | list[di
                 if rt1 and rt2:
                     nm_strings = get_non_matching_strings(cn_column, eng_column)
                     for string in nm_strings:
-                        new_dict = { "hash": hash.hash_string(string), "text": string }
-                        locale_columns.append(new_dict)
+                        new_xliff_object = xliff_handler.XliffEntry(string)
+                        locale_columns.append(new_xliff_object)
             # print(len(locale_columns))
             if locale_columns:
-                return_list.append({"table_name": cn_table.name, "source_strings": locale_columns})
+                new_xliff_file = xliff_handler.XliffFile(cn_table.name, locale_columns)
+                return_list.append(new_xliff_file)
     # print(f"Whaaa {len(return_list)}")
     return return_list
 
 
-files = ["faction", "chartitles", "areagroup"]
-e_db = sh.create_db_from_json("en_json", files)
-c_db = sh.create_db_from_json("cn_json", files)
-
-stl = get_strings_to_localize(e_db, c_db)
-print(stl)
+# files = ["faction", "chartitles", "areagroup"]
+# e_db = sh.create_db_from_json("en_json", files)
+# c_db = sh.create_db_from_json("cn_json", files)
+#
+# stl = get_strings_to_localize(e_db, c_db)
+# for x in stl:
+#     x.write_to_file()
